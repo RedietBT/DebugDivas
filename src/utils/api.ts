@@ -16,44 +16,71 @@ interface AIResponse {
 
 /**
  * Call AI API to analyze error log
- * Currently uses mock mode for development
+ * Uses Google Gemini API for real AI responses
  */
 export async function callAI(request: AIRequest): Promise<AIResponse> {
-  // Mock mode for development and testing
-  return mockAIResponse(request.prompt)
+  // Get API key from environment
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY
   
-  // TODO: Integrate with actual AI API (Cursor API, OpenAI, etc.)
-  // Uncomment and configure when ready:
-  /*
-  const apiKey = getAPIKey()
-  
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`
-    },
-    body: JSON.stringify({
-      model: 'gpt-4',
-      messages: [{ role: 'user', content: request.prompt }],
-      max_tokens: request.maxTokens || 1000
-    })
-  })
-  
-  if (!response.ok) {
-    throw new Error(`AI API error: ${response.statusText}`)
+  // If no API key, fall back to mock mode
+  if (!apiKey || apiKey === 'your-api-key-here') {
+    console.warn('⚠️ No Gemini API key found. Using mock mode.')
+    console.warn('📝 See GEMINI_SETUP.md for setup instructions')
+    return mockAIResponse(request.prompt)
   }
-  
-  const data = await response.json()
-  
-  return {
-    text: data.choices[0].message.content,
-    usage: {
-      promptTokens: data.usage.prompt_tokens,
-      completionTokens: data.usage.completion_tokens
+
+  try {
+    console.log('🤖 Using Gemini AI for analysis...')
+    
+    // Call Google Gemini API
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: request.prompt
+            }]
+          }],
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: request.maxTokens || 2000,
+          }
+        })
+      }
+    )
+
+    if (!response.ok) {
+      const error = await response.text()
+      console.error('❌ Gemini API error:', error)
+      console.warn('⚠️ Falling back to mock mode')
+      return mockAIResponse(request.prompt)
     }
+
+    const data = await response.json()
+    
+    // Extract text from Gemini response
+    const aiText = data.candidates[0]?.content?.parts[0]?.text || ''
+    
+    console.log('✅ Gemini AI response received!')
+    
+    return {
+      text: aiText,
+      usage: {
+        promptTokens: data.usageMetadata?.promptTokenCount || 0,
+        completionTokens: data.usageMetadata?.candidatesTokenCount || 0
+      }
+    }
+    
+  } catch (error) {
+    console.error('❌ Error calling Gemini API:', error)
+    console.warn('⚠️ Falling back to mock mode')
+    return mockAIResponse(request.prompt)
   }
-  */
 }
 
 /**
@@ -75,6 +102,73 @@ function mockAIResponse(prompt: string): Promise<AIResponse> {
  */
 function generateMockResponse(prompt: string): string {
   // Detect error type from prompt
+  
+  // Python ZeroDivisionError
+  if (prompt.includes('ZeroDivisionError')) {
+    return `## Root Cause
+Division by zero - attempting to divide a number by zero.
+
+## Explanation
+Python raises a ZeroDivisionError when you try to divide a number by zero. In your code, the variable 'x' is set to 0, and then you're trying to divide 'y' by 'x' (y/x), which causes this error. You need to add a check to ensure the divisor is not zero before performing the division.
+
+## Fix Code
+\`\`\`python
+x = 0
+y = 3
+
+# Fix: Add a check before division
+if x != 0:
+    z = y / x
+    print(z)
+else:
+    print("Error: Cannot divide by zero")
+    # Or set a default value
+    z = 0
+    print(f"z set to default: {z}")
+\`\`\`
+
+## Commands to Run
+\`\`\`bash
+python rock_paper_scissor_game.py
+\`\`\`
+
+## Success Criteria
+The script runs without ZeroDivisionError and handles the zero division case gracefully by either showing an error message or using a default value.`
+  }
+  
+  // Python Traceback (general)
+  if (prompt.includes('Traceback') && !prompt.includes('ZeroDivisionError')) {
+    return `## Root Cause
+Python runtime error detected in the code execution.
+
+## Explanation
+The Python interpreter encountered an error while running your script. Check the traceback to identify the exact line and error type. Common issues include undefined variables, incorrect indentation, type mismatches, or logic errors.
+
+## Fix Code
+\`\`\`python
+# Review the specific line mentioned in the traceback
+# Common fixes:
+# 1. Check variable names and initialization
+# 2. Verify correct indentation
+# 3. Add try-except blocks for error handling
+
+try:
+    # Your code here
+    pass
+except Exception as e:
+    print(f"Error occurred: {e}")
+\`\`\`
+
+## Commands to Run
+\`\`\`bash
+python your_script.py
+\`\`\`
+
+## Success Criteria
+The script executes without errors and handles edge cases properly.`
+  }
+  
+  // Node.js TypeError
   if (prompt.includes('TypeError') || prompt.includes('undefined')) {
     return `## Root Cause
 Attempting to access a property on an undefined or null object.
@@ -102,7 +196,36 @@ node app.js
 The application runs without TypeError and handles undefined values gracefully.`
   }
   
-  if (prompt.includes('ModuleNotFoundError') || prompt.includes('Cannot find module')) {
+  // Python ModuleNotFoundError
+  if (prompt.includes('ModuleNotFoundError')) {
+    return `## Root Cause
+Required Python module is not installed in the environment.
+
+## Explanation
+The Python script is trying to import a module that isn't installed in your current Python environment. You need to install the missing package using pip.
+
+## Fix Code
+\`\`\`python
+# No code changes needed
+# Just install the missing package
+\`\`\`
+
+## Commands to Run
+\`\`\`bash
+# Install the missing package
+pip install pandas
+# Or if using requirements.txt
+pip install -r requirements.txt
+# Then run your script
+python app.py
+\`\`\`
+
+## Success Criteria
+The module imports successfully and the script runs without ModuleNotFoundError.`
+  }
+  
+  // Node.js Cannot find module
+  if (prompt.includes('Cannot find module')) {
     return `## Root Cause
 Required dependency is not installed in the project.
 

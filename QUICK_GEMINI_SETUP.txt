@@ -1,0 +1,97 @@
+========================================
+🚀 QUICK GEMINI AI SETUP (5 MINUTES)
+========================================
+
+STEP 1: Get FREE API Key
+-------------------------
+1. Open: https://makersuite.google.com/app/apikey
+2. Sign in with Google
+3. Click "Create API Key"
+4. Copy the key (starts with AIzaSy...)
+
+
+STEP 2: Create .env File
+-------------------------
+1. In project root (DebugDivas/), create file: .env
+2. Add this line:
+
+VITE_GEMINI_API_KEY=AIzaSyXXXXXXXXXXXXXXXXXXXX
+                    ↑↑↑ Replace with your actual key
+
+
+STEP 3: Restart Server
+-------------------------
+# Stop server (Ctrl+C in terminal)
+# Then restart:
+npm run dev
+
+
+STEP 4: Test It!
+-------------------------
+1. Paste any error log
+2. Click "Analyze Log 🚀"
+3. Check browser console (F12)
+4. You should see: "🤖 Using Gemini AI for analysis..."
+5. Wait 2-3 seconds
+6. Get REAL AI response! 🎉
+
+
+========================================
+✅ VERIFICATION CHECKLIST
+========================================
+
+□ Created .env file in project root
+□ Added VITE_GEMINI_API_KEY=your-key
+□ Restarted dev server
+□ Opened http://localhost:5173
+□ Opened browser console (F12)
+□ See "Using Gemini AI" message
+□ No "API key not found" warning
+
+
+========================================
+🆘 TROUBLESHOOTING
+========================================
+
+❌ "No Gemini API key found"
+   → Check .env file exists
+   → Check it has VITE_GEMINI_API_KEY=...
+   → Restart server
+
+❌ "Invalid API key"
+   → Verify key is correct
+   → No extra spaces
+   → Starts with AIzaSy
+
+❌ Still using mock mode
+   → Delete .env and recreate
+   → Make sure .env is in project ROOT
+   → Hard refresh browser (Ctrl+Shift+R)
+
+
+========================================
+💡 FREE TIER LIMITS
+========================================
+
+✅ 60 requests per minute (FREE!)
+✅ 1,500 requests per day (FREE!)
+✅ No credit card required
+✅ Perfect for hackathon!
+
+
+========================================
+🎉 BENEFITS
+========================================
+
+✅ REAL AI responses (not mock!)
+✅ Smarter error analysis
+✅ Better fix suggestions
+✅ Handles ANY error type
+✅ Natural language explanations
+✅ Code-specific fixes
+
+
+========================================
+Ready? Follow the 4 steps above! 🚀
+========================================
+

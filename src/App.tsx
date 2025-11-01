@@ -1,8 +1,132 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import './App.css'
+import { LogInputPanel, AnalysisResult, LogHistory, LoadingSpinner } from './components'
+import { detectLogType } from './core'
+import { buildPrompt, parseResponse, SAMPLE_LOGS } from './prompts'
+import { saveLog, getAllLogs, searchLogs, deleteLog, initializeStorage } from './storage'
+import { callAI, generateId, copyToClipboard } from './utils'
+import { ErrorLog, Analysis, LogType, SearchFilters } from './types'
 
 function App() {
+  // State
   const [activeTab, setActiveTab] = useState<'analyze' | 'history'>('analyze')
+  const [logInput, setLogInput] = useState('')
+  const [selectedType, setSelectedType] = useState<LogType | 'auto'>('auto')
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [currentAnalysis, setCurrentAnalysis] = useState<Analysis | null>(null)
+  const [savedLogs, setSavedLogs] = useState<ErrorLog[]>([])
+  const [searchFilters, setSearchFilters] = useState<SearchFilters>({})
+
+  // Initialize storage on mount
+  useEffect(() => {
+    initializeStorage()
+    loadLogs()
+  }, [])
+
+  async function loadLogs() {
+    const logs = await getAllLogs()
+    setSavedLogs(logs)
+  }
+
+  // Main analysis function
+  async function handleAnalyze() {
+    if (!logInput.trim()) {
+      alert('Please paste an error log first!')
+      return
+    }
+
+    setIsAnalyzing(true)
+    setCurrentAnalysis(null)
+
+    try {
+      // 1. Detect log type
+      const detection = detectLogType(logInput)
+      const logType = selectedType === 'auto' ? detection.logType : selectedType
+
+      console.log('🔍 Detected log type:', logType, 'with confidence:', detection.confidence + '%')
+
+      // 2. Build AI prompt
+      const prompt = buildPrompt(logType, logInput)
+
+      // 3. Call AI API (using mock for now)
+      console.log('🤖 Calling AI...')
+      const aiResponse = await callAI({ prompt })
+
+      // 4. Parse AI response
+      const analysis = parseResponse(aiResponse.text)
+
+      console.log('✅ Analysis complete:', analysis)
+
+      // 5. Create error log object
+      const errorLog: ErrorLog = {
+        id: generateId(),
+        timestamp: new Date(),
+        logType: logType,
+        rawLog: logInput,
+        analysis: analysis,
+        tags: [],
+        isFavorite: false
+      }
+
+      // 6. Save to storage
+      await saveLog(errorLog)
+      console.log('💾 Log saved to storage!')
+
+      // 7. Update UI
+      setCurrentAnalysis(analysis)
+      
+      // 8. Reload log history
+      await loadLogs()
+
+      // Show success message
+      alert('✅ Analysis complete and saved to history!')
+
+    } catch (error) {
+      console.error('❌ Analysis failed:', error)
+      alert('Analysis failed. Please try again.')
+    } finally {
+      setIsAnalyzing(false)
+    }
+  }
+
+  // Search logs
+  async function handleSearch(filters: SearchFilters) {
+    setSearchFilters(filters)
+    const results = await searchLogs(filters)
+    setSavedLogs(results)
+  }
+
+  // Copy code to clipboard
+  async function handleCopy(text: string) {
+    const success = await copyToClipboard(text)
+    if (success) {
+      alert('✅ Copied to clipboard!')
+    } else {
+      alert('❌ Failed to copy')
+    }
+  }
+
+  // Load sample log
+  function loadSample(sampleKey: string) {
+    const samples: any = SAMPLE_LOGS
+    const sample = samples[sampleKey]
+    if (sample) {
+      setLogInput(sample.error)
+      setSelectedType(sampleKey as LogType)
+    }
+  }
+
+  // Delete log
+  async function handleDeleteLog(id: string) {
+    await deleteLog(id)
+    await loadLogs()
+  }
+
+  // Reload logs
+  async function handleReloadLogs() {
+    await loadLogs()
+    alert('✅ Logs reloaded!')
+  }
 
   return (
     <div className="min-h-screen bg-cursor-bg text-cursor-text">
@@ -45,7 +169,7 @@ function App() {
                 : 'border-transparent text-cursor-text hover:text-white'
             }`}
           >
-            📚 Log History
+            📚 Log History ({savedLogs.length})
           </button>
         </div>
       </div>
@@ -53,55 +177,37 @@ function App() {
       {/* Main Content */}
       <main className="container mx-auto px-6 py-8">
         {activeTab === 'analyze' ? (
-          <div className="space-y-6">
-            <div className="bg-cursor-panel border border-cursor-border rounded-lg p-6">
-              <h2 className="text-lg font-semibold mb-4 text-white">
-                Paste Your Error Logs
-              </h2>
-              <p className="text-sm text-cursor-text mb-4">
-                Paste stack traces, CI/CD logs, Docker errors, or deployment failures below.
-                DevFix.AI will analyze and suggest fixes.
-              </p>
-              
-              {/* This will be replaced by LogInputPanel component */}
-              <div className="space-y-4">
-                <textarea
-                  className="w-full h-64 bg-cursor-bg border border-cursor-border rounded p-4 text-cursor-text font-mono text-sm focus:outline-none focus:ring-2 focus:ring-cursor-accent"
-                  placeholder="Paste your error logs here..."
-                />
-                <div className="flex items-center justify-between">
-                  <select className="bg-cursor-bg border border-cursor-border rounded px-4 py-2 text-sm text-cursor-text">
-                    <option>Auto-detect log type</option>
-                    <option>Node.js</option>
-                    <option>Python</option>
-                    <option>Docker</option>
-                    <option>GitHub Actions</option>
-                    <option>Vercel</option>
-                    <option>Nginx</option>
-                  </select>
-                  <button className="bg-cursor-accent hover:bg-blue-600 text-white px-6 py-2 rounded font-medium transition-colors">
-                    Analyze Log 🚀
-                  </button>
-                </div>
-              </div>
-            </div>
+          <>
+            {/* Input Panel */}
+            <LogInputPanel
+              value={logInput}
+              onChange={setLogInput}
+              selectedType={selectedType}
+              onTypeChange={setSelectedType}
+              onAnalyze={handleAnalyze}
+              onLoadSample={loadSample}
+              isAnalyzing={isAnalyzing}
+            />
 
-            {/* Results will be shown here */}
-            <div className="bg-cursor-panel border border-cursor-border rounded-lg p-6">
-              <p className="text-cursor-text text-center py-8">
-                Analysis results will appear here...
-              </p>
-            </div>
-          </div>
+            {/* Loading State */}
+            {isAnalyzing && <LoadingSpinner size="lg" text="Analyzing your error log..." />}
+
+            {/* Analysis Result */}
+            {currentAnalysis && !isAnalyzing && (
+              <AnalysisResult
+                analysis={currentAnalysis}
+                onCopy={handleCopy}
+              />
+            )}
+          </>
         ) : (
-          <div className="bg-cursor-panel border border-cursor-border rounded-lg p-6">
-            <h2 className="text-lg font-semibold mb-4 text-white">
-              Saved Error Logs
-            </h2>
-            <p className="text-cursor-text text-center py-8">
-              Your saved logs will appear here...
-            </p>
-          </div>
+          /* Log History */
+          <LogHistory
+            logs={savedLogs}
+            onSearch={handleSearch}
+            onReload={handleReloadLogs}
+            onDelete={handleDeleteLog}
+          />
         )}
       </main>
     </div>
