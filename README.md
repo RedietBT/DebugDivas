@@ -1,6 +1,6 @@
-# 🚀 DevFix.AI
+# ✨ Vibe Assist
 
-**Debug + DevOps Log Fixer for Cursor IDE**
+**AI-Powered Debug Assistant**
 
 Built by **DebugDivas** for [Hackathon Name] 2025
 
@@ -8,7 +8,7 @@ Built by **DebugDivas** for [Hackathon Name] 2025
 
 ## 🎯 What It Does
 
-DevFix.AI is an intelligent debugging and DevOps troubleshooting tool that:
+Vibe Assist is an intelligent debugging and DevOps troubleshooting tool that:
 
 ✅ Analyzes error logs and stack traces
 ✅ Explains what went wrong in plain English
@@ -22,13 +22,16 @@ DevFix.AI is an intelligent debugging and DevOps troubleshooting tool that:
 ## 🏗️ Project Structure
 
 ```
-devfix-ai/
+vibe-assist/
 ├── src/
-│   ├── components/       # Team Member 1: UI Components
-│   ├── core/            # Team Member 2: Core Logic & Detection
-│   ├── prompts/         # Team Member 3: AI Prompts & Intelligence
-│   ├── storage/         # Team Member 4: Log Storage & History
-│   ├── utils/           # Team Member 5: Utilities & Integration
+│   ├── components/       # UI Components (modern shadcn/ui)
+│   │   ├── ui/          # shadcn/ui primitives
+│   │   └── ...          # Custom components
+│   ├── core/            # Core Logic & Detection
+│   ├── prompts/         # AI Prompts & Intelligence
+│   ├── storage/         # Log Storage & History
+│   ├── utils/           # Utilities & Integration
+│   ├── lib/             # Shared utilities (cn, etc.)
 │   ├── types/           # Shared TypeScript types
 │   ├── App.tsx          # Main application
 │   └── main.tsx         # Entry point

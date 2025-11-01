@@ -1,7 +1,6 @@
-// Team Member 1: UI Components
-// Loading spinner component
-
 import React from 'react'
+import { Loader2 } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 interface LoadingSpinnerProps {
   size?: 'sm' | 'md' | 'lg'
@@ -13,15 +12,15 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   text
 }) => {
   const sizeClasses = {
-    sm: 'w-4 h-4',
-    md: 'w-8 h-8',
-    lg: 'w-12 h-12'
+    sm: 'h-4 w-4',
+    md: 'h-8 w-8',
+    lg: 'h-12 w-12'
   }
 
   return (
     <div className="flex flex-col items-center justify-center p-8">
-      <div className={`${sizeClasses[size]} border-4 border-cursor-border border-t-cursor-accent rounded-full animate-spin`}></div>
-      {text && <p className="mt-4 text-cursor-text">{text}</p>}
+      <Loader2 className={cn('animate-spin text-primary', sizeClasses[size])} />
+      {text && <p className="mt-4 text-muted-foreground">{text}</p>}
     </div>
   )
 }

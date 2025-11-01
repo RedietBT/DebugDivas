@@ -7,6 +7,12 @@ import { saveLog, getAllLogs, searchLogs, deleteLog, initializeStorage } from '.
 import { callAI, generateId, copyToClipboard } from './utils'
 import { findSimilarLogs, categorizeError } from './utils/logMatcher'
 import { ErrorLog, Analysis, LogType, SearchFilters } from './types'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from './components/ui/tabs'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './components/ui/card'
+import { Badge } from './components/ui/badge'
+import { Button } from './components/ui/button'
+import { Sparkles, History, ChevronDown, ChevronUp } from 'lucide-react'
+import { ThemeToggle } from './components/theme-toggle'
 
 function App() {
   // State
@@ -152,55 +158,44 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-cursor-bg text-cursor-text">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-cursor-panel border-b border-cursor-border px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-cursor-accent rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">D</span>
+      <header className="border-b bg-card/50 backdrop-blur supports-[backdrop-filter]:bg-card/50">
+        <div className="container flex h-16 items-center justify-between px-6">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary/60">
+              <Sparkles className="h-5 w-5 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-white">DevFix.AI</h1>
-              <p className="text-xs text-cursor-text">Debug + DevOps Fixer</p>
+              <h1 className="text-xl font-bold tracking-tight">Vibe Assist</h1>
+              <p className="text-xs text-muted-foreground">AI-Powered Debug Assistant</p>
             </div>
           </div>
-          <div className="text-xs text-cursor-text">
-            Built by DebugDivas 🚀
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
+            <Badge variant="secondary" className="hidden sm:inline-flex">
+              Built by DebugDivas
+            </Badge>
           </div>
         </div>
       </header>
 
-      {/* Tab Navigation */}
-      <div className="bg-cursor-panel border-b border-cursor-border">
-        <div className="flex px-6">
-          <button
-            onClick={() => setActiveTab('analyze')}
-            className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === 'analyze'
-                ? 'border-cursor-accent text-cursor-accent'
-                : 'border-transparent text-cursor-text hover:text-white'
-            }`}
-          >
-            🔍 Analyze Logs
-          </button>
-          <button
-            onClick={() => setActiveTab('history')}
-            className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === 'history'
-                ? 'border-cursor-accent text-cursor-accent'
-                : 'border-transparent text-cursor-text hover:text-white'
-            }`}
-          >
-            📚 Log History ({savedLogs.length})
-          </button>
-        </div>
-      </div>
-
       {/* Main Content */}
       <main className="container mx-auto px-6 py-8">
-        {activeTab === 'analyze' ? (
-          <>
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'analyze' | 'history')} className="w-full">
+          <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-8">
+            <TabsTrigger value="analyze" className="gap-2">
+              <Sparkles className="h-4 w-4" />
+              Analyze Logs
+            </TabsTrigger>
+            <TabsTrigger value="history" className="gap-2">
+              <History className="h-4 w-4" />
+              History ({savedLogs.length})
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="analyze" className="space-y-6"
+          >
             {/* Input Panel */}
             <LogInputPanel
               value={logInput}
@@ -217,117 +212,127 @@ function App() {
 
             {/* Similar Past Logs */}
             {similarLogs.length > 0 && !isAnalyzing && (
-              <div className="bg-cursor-panel border border-yellow-600 rounded-lg p-6 mb-6">
-                <h3 className="text-lg font-semibold text-yellow-400 mb-3">
-                  {showAmharic ? '✨ ተመሳሳይ ያለፉ ስህተቶች ተገኝተዋል!' : `✨ Found ${similarLogs.length} Similar Past Error${similarLogs.length > 1 ? 's' : ''}!`}
-                </h3>
-                <p className="text-sm text-cursor-text mb-4">
-                  {showAmharic 
-                    ? 'ከዚህ በፊት ተመሳሳይ ስህተቶች አጋጥመውዎታል። የሰራውን እንመልከት:' 
-                    : "You've encountered similar errors before. Here's what worked:"}
-                </p>
-                <div className="space-y-3">
+              <Card className="border-yellow-500/50 bg-yellow-500/5">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2 text-yellow-500">
+                    <Sparkles className="h-5 w-5" />
+                    {showAmharic ? 'ተመሳሳይ ያለፉ ስህተቶች ተገኝተዋል!' : `Found ${similarLogs.length} Similar Past Error${similarLogs.length > 1 ? 's' : ''}!`}
+                  </CardTitle>
+                  <CardDescription>
+                    {showAmharic 
+                      ? 'ከዚህ በፊት ተመሳሳይ ስህተቶች አጋጥመውዎታል። የሰራውን እንመልከት:' 
+                      : "You've encountered similar errors before. Here's what worked:"}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
                   {similarLogs.map((log) => {
                     const isExpanded = expandedSimilarLog === log.id
                     return (
-                      <div key={log.id} className="bg-cursor-bg border border-cursor-border rounded p-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center space-x-2">
-                            <span className="text-xs px-2 py-1 bg-cursor-accent rounded text-white">
-                              {log.logType}
-                            </span>
-                            {log.tags.map((tag, idx) => (
-                              <span key={idx} className="text-xs px-2 py-1 bg-blue-600 rounded text-white">
-                                📂 {tag}
+                      <Card key={log.id} className="bg-card/50">
+                        <CardContent className="p-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <Badge variant="default">{log.logType}</Badge>
+                              {log.tags.map((tag, idx) => (
+                                <Badge key={idx} variant="secondary">{tag}</Badge>
+                              ))}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-muted-foreground">
+                                {new Date(log.timestamp).toLocaleDateString()}
                               </span>
-                            ))}
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setExpandedSimilarLog(isExpanded ? null : log.id)}
+                                className="h-8"
+                              >
+                                {isExpanded ? (
+                                  <ChevronUp className="h-4 w-4" />
+                                ) : (
+                                  <ChevronDown className="h-4 w-4" />
+                                )}
+                              </Button>
+                            </div>
                           </div>
-                          <div className="flex items-center space-x-2">
-                            <span className="text-xs text-cursor-text">
-                              {new Date(log.timestamp).toLocaleDateString()}
-                            </span>
-                            <button
-                              onClick={() => setExpandedSimilarLog(isExpanded ? null : log.id)}
-                              className="text-xs text-cursor-accent hover:text-blue-400"
-                            >
-                              {isExpanded ? '▼ Hide' : '▶ Show Details'}
-                            </button>
-                          </div>
-                        </div>
-                        <p className="text-sm text-white mb-2">
-                          {log.analysis?.rootCause || 'No analysis available'}
-                        </p>
-                        {!isExpanded ? (
-                          <p className="text-xs text-cursor-text font-mono line-clamp-2">
-                            {log.rawLog}
+                          <p className="text-sm mb-2">
+                            {log.analysis?.rootCause || 'No analysis available'}
                           </p>
-                        ) : (
-                          <div className="mt-4 space-y-3 border-t border-cursor-border pt-3">
-                            <div>
-                              <p className="text-xs text-cursor-text font-semibold mb-1">
-                                {showAmharic ? 'ዋና ምክንያት:' : 'Root Cause:'}
-                              </p>
-                              <p className="text-sm text-white">{log.analysis?.rootCause}</p>
-                            </div>
-                            <div>
-                              <p className="text-xs text-cursor-text font-semibold mb-1">
-                                {showAmharic ? 'ማብራሪያ:' : 'Explanation:'}
-                              </p>
-                              <p className="text-sm text-cursor-text">{log.analysis?.explanation}</p>
-                            </div>
-                            {log.analysis?.fixCode && (
+                          {!isExpanded ? (
+                            <p className="text-xs text-muted-foreground font-mono line-clamp-2">
+                              {log.rawLog}
+                            </p>
+                          ) : (
+                            <div className="mt-4 space-y-4 border-t pt-4">
                               <div>
-                                <p className="text-xs text-cursor-text font-semibold mb-1">
-                                  {showAmharic ? 'የመፍትሄ ኮድ:' : 'Fix Code:'}
+                                <p className="text-xs font-semibold text-muted-foreground mb-1">
+                                  {showAmharic ? 'ዋና ምክንያት:' : 'Root Cause:'}
                                 </p>
-                                <pre className="bg-cursor-bg border border-cursor-border rounded p-3 text-xs overflow-x-auto">
-                                  <code>{log.analysis.fixCode}</code>
+                                <p className="text-sm">{log.analysis?.rootCause}</p>
+                              </div>
+                              <div>
+                                <p className="text-xs font-semibold text-muted-foreground mb-1">
+                                  {showAmharic ? 'ማብራሪያ:' : 'Explanation:'}
+                                </p>
+                                <p className="text-sm text-muted-foreground">{log.analysis?.explanation}</p>
+                              </div>
+                              {log.analysis?.fixCode && (
+                                <div>
+                                  <p className="text-xs font-semibold text-muted-foreground mb-1">
+                                    {showAmharic ? 'የመፍትሄ ኮድ:' : 'Fix Code:'}
+                                  </p>
+                                  <pre className="bg-muted rounded-md p-3 text-xs overflow-x-auto">
+                                    <code className="font-mono">{log.analysis.fixCode}</code>
+                                  </pre>
+                                </div>
+                              )}
+                              <div>
+                                <p className="text-xs font-semibold text-muted-foreground mb-1">
+                                  {showAmharic ? 'የስህተቱ ቅጂ:' : 'Original Error:'}
+                                </p>
+                                <pre className="bg-muted rounded-md p-3 text-xs overflow-x-auto">
+                                  <code className="font-mono">{log.rawLog}</code>
                                 </pre>
                               </div>
-                            )}
-                            <div>
-                              <p className="text-xs text-cursor-text font-semibold mb-1">
-                                {showAmharic ? 'የስህተቱ ቅጂ:' : 'Original Error:'}
-                              </p>
-                              <pre className="bg-cursor-bg border border-cursor-border rounded p-3 text-xs overflow-x-auto">
-                                <code>{log.rawLog}</code>
-                              </pre>
                             </div>
-                          </div>
-                        )}
-                      </div>
+                          )}
+                        </CardContent>
+                      </Card>
                     )
                   })}
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             )}
 
             {/* Translation Toggle & Category */}
             {(errorCategory || currentAnalysis) && !isAnalyzing && (
-              <div className="bg-cursor-panel border border-cursor-border rounded-lg p-4 mb-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    {errorCategory && (
-                      <>
-                        <span className="text-sm text-cursor-text">
-                          {showAmharic ? 'ምድብ:' : 'Category:'}
-                        </span>
-                        <span className="text-sm px-3 py-1 bg-blue-600 rounded text-white font-medium">
-                          📂 {errorCategory}
-                        </span>
-                      </>
-                    )}
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      {errorCategory && (
+                        <>
+                          <span className="text-sm text-muted-foreground">
+                            {showAmharic ? 'ምድብ:' : 'Category:'}
+                          </span>
+                          <Badge variant="secondary" className="gap-1">
+                            {errorCategory}
+                          </Badge>
+                        </>
+                      )}
+                    </div>
+                    
+                    {/* Translation Toggle Button */}
+                    <Button
+                      onClick={() => setShowAmharic(!showAmharic)}
+                      variant="outline"
+                      size="sm"
+                    >
+                      <span>{showAmharic ? 'English' : 'አማርኛ'}</span>
+                    </Button>
                   </div>
-                  
-                  {/* Translation Toggle Button */}
-                  <button
-                    onClick={() => setShowAmharic(!showAmharic)}
-                    className="flex items-center space-x-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded font-medium transition-colors"
-                  >
-                    <span>{showAmharic ? '🇺🇸 English' : '🇪🇹 አማርኛ'}</span>
-                  </button>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             )}
 
             {/* Analysis Result */}
@@ -338,20 +343,23 @@ function App() {
                 showAmharic={showAmharic}
               />
             )}
-          </>
-        ) : (
-          /* Log History */
-          <LogHistory
-            logs={savedLogs}
-            onSearch={handleSearch}
-            onReload={handleReloadLogs}
-            onDelete={handleDeleteLog}
-          />
-        )}
+          </TabsContent>
+
+          <TabsContent value="history">
+            {/* Log History */}
+            <LogHistory
+              logs={savedLogs}
+              onSearch={handleSearch}
+              onReload={handleReloadLogs}
+              onDelete={handleDeleteLog}
+            />
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   )
 }
 
 export default App
+
 

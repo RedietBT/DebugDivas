@@ -1,11 +1,11 @@
-// Team Member 1: UI Components
-// TODO: Implement log history display
-// See TEAM_TASKS.md for requirements
-
 import React, { useState, useMemo } from 'react'
 import { ErrorLog, SearchFilters, LogType } from '@/types'
-import { Card } from './Card'
-import { Button } from './Button'
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
+import { Button } from './ui/button'
+import { Input } from './ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
+import { Badge } from './ui/badge'
+import { RefreshCw, Star, Trash2, X } from 'lucide-react'
 
 interface LogHistoryProps {
   logs: ErrorLog[]
@@ -68,108 +68,106 @@ export const LogHistory: React.FC<LogHistoryProps> = ({
     return filtered
   }, [logs, filterType, filterCategory, searchTerm])
 
-  const handleSearch = () => {
-    if (onSearch) {
-      onSearch({ searchTerm })
-    }
-  }
-
   return (
     <div className="space-y-6">
       {/* Search and Filter Bar */}
       <Card>
-        <div className="space-y-4">
-          <div className="flex items-center space-x-4">
-            <input
+        <CardContent className="pt-6 space-y-4">
+          <div className="flex items-center gap-4">
+            <Input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search logs..."
-              className="flex-1 bg-cursor-bg border border-cursor-border rounded px-4 py-2 text-sm text-cursor-text focus:outline-none focus:ring-2 focus:ring-cursor-accent"
+              className="flex-1"
             />
             {onReload && (
-              <button
+              <Button
                 onClick={onReload}
-                className="text-sm text-cursor-text hover:text-white px-4 py-2"
+                variant="outline"
+                size="icon"
               >
-                ↻ Reload
-              </button>
+                <RefreshCw className="h-4 w-4" />
+              </Button>
             )}
           </div>
           
           {/* Filters */}
-          <div className="flex items-center space-x-4">
-            <div className="flex-1">
-              <label className="text-xs text-cursor-text mb-1 block">Filter by Language:</label>
-              <select
-                value={filterType}
-                onChange={(e) => setFilterType(e.target.value as LogType | 'all')}
-                className="w-full bg-cursor-bg border border-cursor-border rounded px-3 py-2 text-sm text-cursor-text focus:outline-none focus:ring-2 focus:ring-cursor-accent"
-              >
-                <option value="all">All Languages</option>
-                {types.map(type => (
-                  <option key={type} value={type}>{type}</option>
-                ))}
-              </select>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Filter by Language:</label>
+              <Select value={filterType} onValueChange={(v) => setFilterType(v as LogType | 'all')}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All Languages" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Languages</SelectItem>
+                  {types.map(type => (
+                    <SelectItem key={type} value={type}>{type}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             
-            <div className="flex-1">
-              <label className="text-xs text-cursor-text mb-1 block">Filter by Category:</label>
-              <select
-                value={filterCategory}
-                onChange={(e) => setFilterCategory(e.target.value)}
-                className="w-full bg-cursor-bg border border-cursor-border rounded px-3 py-2 text-sm text-cursor-text focus:outline-none focus:ring-2 focus:ring-cursor-accent"
-              >
-                <option value="all">All Categories</option>
-                {categories.map(cat => (
-                  <option key={cat} value={cat}>{cat}</option>
-                ))}
-              </select>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Filter by Category:</label>
+              <Select value={filterCategory} onValueChange={setFilterCategory}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All Categories" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  {categories.map(cat => (
+                    <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-            
-            {(filterType !== 'all' || filterCategory !== 'all' || searchTerm) && (
-              <button
-                onClick={() => {
-                  setFilterType('all')
-                  setFilterCategory('all')
-                  setSearchTerm('')
-                }}
-                className="text-xs text-red-400 hover:text-red-300 mt-5"
-              >
-                Clear Filters
-              </button>
-            )}
           </div>
-        </div>
+          
+          {(filterType !== 'all' || filterCategory !== 'all' || searchTerm) && (
+            <Button
+              onClick={() => {
+                setFilterType('all')
+                setFilterCategory('all')
+                setSearchTerm('')
+              }}
+              variant="ghost"
+              size="sm"
+            >
+              Clear Filters
+            </Button>
+          )}
+        </CardContent>
       </Card>
 
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-white">{logs.length}</div>
-            <div className="text-xs text-cursor-text">Total Logs</div>
-          </div>
+          <CardContent className="p-6 text-center">
+            <div className="text-3xl font-bold">{logs.length}</div>
+            <div className="text-xs text-muted-foreground mt-1">Total Logs</div>
+          </CardContent>
         </Card>
         <Card>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-white">{filteredLogs.length}</div>
-            <div className="text-xs text-cursor-text">Filtered</div>
-          </div>
+          <CardContent className="p-6 text-center">
+            <div className="text-3xl font-bold">{filteredLogs.length}</div>
+            <div className="text-xs text-muted-foreground mt-1">Filtered</div>
+          </CardContent>
         </Card>
         <Card>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-white">
+          <CardContent className="p-6 text-center">
+            <div className="text-3xl font-bold">
               {logs.filter(l => l.isFavorite).length}
             </div>
-            <div className="text-xs text-cursor-text">Favorites</div>
-          </div>
+            <div className="text-xs text-muted-foreground mt-1">Favorites</div>
+          </CardContent>
         </Card>
         <Card>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-white">{categories.length}</div>
-            <div className="text-xs text-cursor-text">Categories</div>
-          </div>
+          <CardContent className="p-6 text-center">
+            <div className="text-3xl font-bold">{categories.length}</div>
+            <div className="text-xs text-muted-foreground mt-1">Categories</div>
+          </CardContent>
         </Card>
       </div>
 
@@ -177,64 +175,66 @@ export const LogHistory: React.FC<LogHistoryProps> = ({
       <div className="space-y-3">
         {filteredLogs.length === 0 ? (
           <Card>
-            <p className="text-center text-cursor-text py-8">
+            <CardContent className="py-12 text-center text-muted-foreground">
               No logs saved yet. Analyze an error to get started!
-            </p>
+            </CardContent>
           </Card>
         ) : (
           filteredLogs.map((log) => (
-            <Card key={log.id} className="hover:border-cursor-accent cursor-pointer transition-colors">
-              <div onClick={() => setSelectedLog(log)}>
-                <div className="flex items-start justify-between mb-2">
+            <Card 
+              key={log.id} 
+              className="hover:border-primary cursor-pointer transition-colors"
+              onClick={() => setSelectedLog(log)}
+            >
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between mb-3">
                   <div className="flex-1">
                     <div className="flex items-center flex-wrap gap-2 mb-2">
-                      <span className="text-xs px-2 py-1 bg-cursor-accent rounded text-white">
-                        {log.logType}
-                      </span>
+                      <Badge>{log.logType}</Badge>
                       {log.tags.map((tag, idx) => (
-                        <span key={idx} className="text-xs px-2 py-1 bg-blue-600 rounded text-white">
-                          📂 {tag}
-                        </span>
+                        <Badge key={idx} variant="secondary">{tag}</Badge>
                       ))}
-                      <span className="text-xs text-cursor-text">
+                      <span className="text-xs text-muted-foreground">
                         {new Date(log.timestamp).toLocaleString()}
                       </span>
                     </div>
-                    <p className="text-sm text-white line-clamp-2">
+                    <p className="text-sm line-clamp-2">
                       {log.analysis?.rootCause || 'Analyzing...'}
                     </p>
                   </div>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center gap-2 ml-4">
                     {onToggleFavorite && (
-                      <button
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={(e) => {
                           e.stopPropagation()
                           onToggleFavorite(log.id)
                         }}
-                        className="text-lg"
                       >
-                        {log.isFavorite ? '⭐' : '☆'}
-                      </button>
+                        <Star className={`h-4 w-4 ${log.isFavorite ? 'fill-yellow-500 text-yellow-500' : ''}`} />
+                      </Button>
                     )}
                     {onDelete && (
-                      <button
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={(e) => {
                           e.stopPropagation()
                           if (confirm('Delete this log?')) {
                             onDelete(log.id)
                           }
                         }}
-                        className="text-red-500 text-sm hover:text-red-400"
                       >
-                        🗑️
-                      </button>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
                     )}
                   </div>
                 </div>
-                <p className="text-xs text-cursor-text line-clamp-1 font-mono">
+                <p className="text-xs text-muted-foreground line-clamp-1 font-mono">
                   {log.rawLog}
                 </p>
-              </div>
+              </CardContent>
             </Card>
           ))
         )}
@@ -243,52 +243,52 @@ export const LogHistory: React.FC<LogHistoryProps> = ({
       {/* Selected Log Detail Modal */}
       {selectedLog && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
           onClick={() => setSelectedLog(null)}
         >
-          <div
-            className="bg-cursor-panel border border-cursor-border rounded-lg p-6 max-w-3xl max-h-[80vh] overflow-y-auto"
+          <Card
+            className="max-w-3xl w-full max-h-[80vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-white">Log Details</h3>
-              <button
-                onClick={() => setSelectedLog(null)}
-                className="text-cursor-text hover:text-white"
-              >
-                ✕
-              </button>
-            </div>
-            <div className="space-y-4">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Log Details</CardTitle>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setSelectedLog(null)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
               <div>
-                <p className="text-xs text-cursor-text mb-1">Type</p>
-                <span className="text-xs px-2 py-1 bg-cursor-accent rounded text-white">
-                  {selectedLog.logType}
-                </span>
+                <p className="text-sm font-medium text-muted-foreground mb-2">Type</p>
+                <Badge>{selectedLog.logType}</Badge>
               </div>
               <div>
-                <p className="text-xs text-cursor-text mb-1">Raw Log</p>
-                <pre className="bg-cursor-bg p-3 rounded text-xs overflow-x-auto">
-                  {selectedLog.rawLog}
+                <p className="text-sm font-medium text-muted-foreground mb-2">Raw Log</p>
+                <pre className="bg-muted p-4 rounded-md text-xs overflow-x-auto">
+                  <code className="font-mono">{selectedLog.rawLog}</code>
                 </pre>
               </div>
               {selectedLog.analysis && (
                 <>
                   <div>
-                    <p className="text-xs text-cursor-text mb-1">Root Cause</p>
-                    <p className="text-white">{selectedLog.analysis.rootCause}</p>
+                    <p className="text-sm font-medium text-muted-foreground mb-2">Root Cause</p>
+                    <p>{selectedLog.analysis.rootCause}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-cursor-text mb-1">Explanation</p>
-                    <p className="text-cursor-text">{selectedLog.analysis.explanation}</p>
+                    <p className="text-sm font-medium text-muted-foreground mb-2">Explanation</p>
+                    <p className="text-muted-foreground">{selectedLog.analysis.explanation}</p>
                   </div>
                 </>
               )}
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
       )}
     </div>
   )
 }
-

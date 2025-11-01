@@ -1,8 +1,6 @@
-// Team Member 1: UI Components
-// Button to copy text to clipboard
-
 import React, { useState } from 'react'
 import { Copy, Check } from 'lucide-react'
+import { Button } from './ui/button'
 
 interface CopyButtonProps {
   text: string
@@ -34,17 +32,19 @@ export const CopyButton: React.FC<CopyButtonProps> = ({ text, onCopy }) => {
   }
 
   return (
-    <button
+    <Button
       onClick={handleCopy}
-      className="p-2 hover:bg-cursor-bg rounded transition-colors"
+      variant="ghost"
+      size="icon"
+      className="h-8 w-8"
       title="Copy to clipboard"
     >
       {copied ? (
-        <Check className="w-4 h-4 text-cursor-success" />
+        <Check className="h-4 w-4 text-green-500" />
       ) : (
-        <Copy className="w-4 h-4 text-cursor-text" />
+        <Copy className="h-4 w-4" />
       )}
-    </button>
+    </Button>
   )
 }
 

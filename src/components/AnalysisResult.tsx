@@ -1,12 +1,10 @@
-// Team Member 1: UI Components
-// TODO: Implement analysis result display
-// See TEAM_TASKS.md for requirements
-
 import React from 'react'
 import { Analysis } from '@/types'
-import { Card } from './Card'
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
+import { Badge } from './ui/badge'
 import { CopyButton } from './CopyButton'
 import { translateToAmharic, amharicHeaders } from '@/utils/amharicTranslator'
+import { Target, Brain, Wrench, Settings, Terminal, CheckCircle } from 'lucide-react'
 
 interface AnalysisResultProps {
   analysis: Analysis
@@ -34,81 +32,107 @@ export const AnalysisResult: React.FC<AnalysisResultProps> = ({
   return (
     <div className="space-y-4">
       {/* Root Cause */}
-      <Card>
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <h3 className="text-sm font-semibold text-cursor-text mb-2">
+      <Card className="border-primary/20">
+        <CardHeader>
+          <div className="flex items-start justify-between">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Target className="h-5 w-5 text-primary" />
               {headers.rootCause}
-            </h3>
-            <p className="text-lg text-white">{displayAnalysis.rootCause}</p>
+            </CardTitle>
+            <Badge variant="secondary">
+              {displayAnalysis.confidence}% {headers.confidence}
+            </Badge>
           </div>
-          <div className="text-sm text-cursor-text">
-            {displayAnalysis.confidence}% {headers.confidence}
-          </div>
-        </div>
+        </CardHeader>
+        <CardContent>
+          <p className="text-lg">{displayAnalysis.rootCause}</p>
+        </CardContent>
       </Card>
 
       {/* Explanation */}
       <Card>
-        <h3 className="text-sm font-semibold text-cursor-text mb-2">
-          {headers.explanation}
-        </h3>
-        <p className="text-cursor-text">{displayAnalysis.explanation}</p>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Brain className="h-5 w-5 text-primary" />
+            {headers.explanation}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">{displayAnalysis.explanation}</p>
+        </CardContent>
       </Card>
 
       {/* Fix Code */}
       {displayAnalysis.fixCode && (
         <Card>
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-semibold text-cursor-text">
-              {headers.fixCode}
-            </h3>
-            <CopyButton text={displayAnalysis.fixCode} onCopy={onCopy} />
-          </div>
-          <pre className="bg-cursor-bg p-4 rounded overflow-x-auto">
-            <code className="text-sm text-cursor-text">{displayAnalysis.fixCode}</code>
-          </pre>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Wrench className="h-5 w-5 text-primary" />
+                {headers.fixCode}
+              </CardTitle>
+              <CopyButton text={displayAnalysis.fixCode} onCopy={onCopy} />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <pre className="bg-muted p-4 rounded-md overflow-x-auto">
+              <code className="text-sm font-mono">{displayAnalysis.fixCode}</code>
+            </pre>
+          </CardContent>
         </Card>
       )}
 
       {/* Fix Config */}
       {displayAnalysis.fixConfig && (
         <Card>
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-semibold text-cursor-text">
-              {headers.fixConfig}
-            </h3>
-            <CopyButton text={displayAnalysis.fixConfig} onCopy={onCopy} />
-          </div>
-          <pre className="bg-cursor-bg p-4 rounded overflow-x-auto">
-            <code className="text-sm text-cursor-text">{displayAnalysis.fixConfig}</code>
-          </pre>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Settings className="h-5 w-5 text-primary" />
+                {headers.fixConfig}
+              </CardTitle>
+              <CopyButton text={displayAnalysis.fixConfig} onCopy={onCopy} />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <pre className="bg-muted p-4 rounded-md overflow-x-auto">
+              <code className="text-sm font-mono">{displayAnalysis.fixConfig}</code>
+            </pre>
+          </CardContent>
         </Card>
       )}
 
       {/* Commands */}
       {displayAnalysis.commands && displayAnalysis.commands.length > 0 && (
         <Card>
-          <h3 className="text-sm font-semibold text-cursor-text mb-2">
-            {headers.commands}
-          </h3>
-          <div className="space-y-2">
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Terminal className="h-5 w-5 text-primary" />
+              {headers.commands}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
             {displayAnalysis.commands.map((cmd, idx) => (
-              <div key={idx} className="flex items-center justify-between bg-cursor-bg p-3 rounded">
-                <code className="text-sm text-cursor-text">{cmd}</code>
+              <div key={idx} className="flex items-center justify-between bg-muted p-3 rounded-md">
+                <code className="text-sm font-mono flex-1">{cmd}</code>
                 <CopyButton text={cmd} onCopy={onCopy} />
               </div>
             ))}
-          </div>
+          </CardContent>
         </Card>
       )}
 
       {/* Success Criteria */}
       <Card>
-        <h3 className="text-sm font-semibold text-cursor-text mb-2">
-          {headers.successCriteria}
-        </h3>
-        <p className="text-cursor-text">{displayAnalysis.successCriteria}</p>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <CheckCircle className="h-5 w-5 text-primary" />
+            {headers.successCriteria}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">{displayAnalysis.successCriteria}</p>
+        </CardContent>
       </Card>
     </div>
   )

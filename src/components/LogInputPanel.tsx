@@ -1,10 +1,11 @@
-// Team Member 1: UI Components
-// TODO: Implement log input panel
-// See TEAM_TASKS.md and src/components/README.md for requirements
-
 import React from 'react'
 import { LogType } from '@/types'
-import { Button } from './Button'
+import { Button } from './ui/button'
+import { Textarea } from './ui/textarea'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card'
+import { Badge } from './ui/badge'
+import { Sparkles } from 'lucide-react'
 
 interface LogInputPanelProps {
   value: string
@@ -26,96 +27,108 @@ export const LogInputPanel: React.FC<LogInputPanelProps> = ({
   isAnalyzing
 }) => {
   return (
-    <div className="bg-cursor-panel border border-cursor-border rounded-lg p-6 mb-6">
-      <h2 className="text-lg font-semibold mb-4 text-white">
-        Paste Your Error Logs
-      </h2>
-      
-      <p className="text-sm text-cursor-text mb-4">
-        Paste stack traces, CI/CD logs, Docker errors, or deployment failures below.
-        DevFix.AI will analyze and suggest fixes.
-      </p>
-      
-      {/* Textarea */}
-      <textarea
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full h-64 bg-cursor-bg border border-cursor-border rounded p-4 text-cursor-text font-mono text-sm focus:outline-none focus:ring-2 focus:ring-cursor-accent resize-y"
-        placeholder="Paste your error logs here..."
-      />
-      
-      {/* Character count */}
-      <div className="text-xs text-cursor-text mt-2">
-        {value.length} characters
-      </div>
-      
-      {/* Controls */}
-      <div className="flex items-center justify-between mt-4">
-        <div className="flex items-center space-x-4">
-          {/* Log type dropdown */}
-          <select
-            value={selectedType}
-            onChange={(e) => onTypeChange(e.target.value as LogType | 'auto')}
-            className="bg-cursor-bg border border-cursor-border rounded px-4 py-2 text-sm text-cursor-text focus:outline-none focus:ring-2 focus:ring-cursor-accent"
-          >
-            <option value="auto">Auto-detect log type</option>
-            <option value="node">Node.js</option>
-            <option value="python">Python</option>
-            <option value="docker">Docker</option>
-            <option value="github_actions">GitHub Actions</option>
-            <option value="vercel">Vercel</option>
-            <option value="nginx">Nginx</option>
-            <option value="general">General</option>
-          </select>
-          
-          {/* Clear button */}
-          <button
-            onClick={() => onChange('')}
-            className="text-sm text-cursor-text hover:text-white"
-            disabled={!value}
-          >
-            Clear
-          </button>
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Sparkles className="h-5 w-5 text-primary" />
+          Paste Your Error Logs
+        </CardTitle>
+        <CardDescription>
+          Paste stack traces, CI/CD logs, Docker errors, or deployment failures below.
+          Vibe Assist will analyze and suggest fixes.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {/* Textarea */}
+        <Textarea
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="min-h-64 font-mono text-sm resize-y"
+          placeholder="Paste your error logs here..."
+        />
+        
+        {/* Character count */}
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <span>{value.length} characters</span>
         </div>
         
-        {/* Analyze button */}
-        <Button
-          onClick={onAnalyze}
-          variant="primary"
-          isLoading={isAnalyzing}
-          disabled={!value.trim()}
-        >
-          Analyze Log 🚀
-        </Button>
-      </div>
-      
-      {/* Sample logs */}
-      {onLoadSample && (
-        <div className="mt-4 pt-4 border-t border-cursor-border">
-          <p className="text-xs text-cursor-text mb-2">Quick Test:</p>
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={() => onLoadSample('node')}
-              className="text-xs px-3 py-1 bg-cursor-bg hover:bg-gray-700 rounded"
+        {/* Controls */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-4 w-full sm:w-auto">
+            {/* Log type dropdown */}
+            <Select value={selectedType} onValueChange={(v) => onTypeChange(v as LogType | 'auto')}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Select log type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="auto">Auto-detect</SelectItem>
+                <SelectItem value="node">Node.js</SelectItem>
+                <SelectItem value="python">Python</SelectItem>
+                <SelectItem value="docker">Docker</SelectItem>
+                <SelectItem value="github_actions">GitHub Actions</SelectItem>
+                <SelectItem value="vercel">Vercel</SelectItem>
+                <SelectItem value="nginx">Nginx</SelectItem>
+                <SelectItem value="general">General</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            {/* Clear button */}
+            <Button
+              onClick={() => onChange('')}
+              variant="ghost"
+              size="sm"
+              disabled={!value}
             >
-              Node.js Error
-            </button>
-            <button
-              onClick={() => onLoadSample('python')}
-              className="text-xs px-3 py-1 bg-cursor-bg hover:bg-gray-700 rounded"
-            >
-              Python Error
-            </button>
-            <button
-              onClick={() => onLoadSample('docker')}
-              className="text-xs px-3 py-1 bg-cursor-bg hover:bg-gray-700 rounded"
-            >
-              Docker Error
-            </button>
+              Clear
+            </Button>
           </div>
+          
+          {/* Analyze button */}
+          <Button
+            onClick={onAnalyze}
+            disabled={!value.trim() || isAnalyzing}
+            size="lg"
+            className="w-full sm:w-auto"
+          >
+            {isAnalyzing ? (
+              <>Analyzing...</>
+            ) : (
+              <>Analyze Log</>
+            )}
+          </Button>
         </div>
-      )}
-    </div>
+        
+        {/* Sample logs */}
+        {onLoadSample && (
+          <div className="pt-4 border-t space-y-2">
+            <p className="text-sm text-muted-foreground">Quick Test:</p>
+            <div className="flex flex-wrap gap-2">
+              <Badge
+                variant="outline"
+                className="cursor-pointer hover:bg-accent"
+                onClick={() => onLoadSample('node')}
+              >
+                Node.js Error
+              </Badge>
+              <Badge
+                variant="outline"
+                className="cursor-pointer hover:bg-accent"
+                onClick={() => onLoadSample('python')}
+              >
+                Python Error
+              </Badge>
+              <Badge
+                variant="outline"
+                className="cursor-pointer hover:bg-accent"
+                onClick={() => onLoadSample('docker')}
+              >
+                Docker Error
+              </Badge>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   )
 }
 

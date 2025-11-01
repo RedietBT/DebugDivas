@@ -9,4 +9,6 @@ export { LoadingSpinner } from './LoadingSpinner'
 export { Tabs } from './Tabs'
 export { Card } from './Card'
 export { CopyButton } from './CopyButton'
+export { ThemeProvider, useTheme } from './theme-provider'
+export { ThemeToggle } from './theme-toggle'
 
