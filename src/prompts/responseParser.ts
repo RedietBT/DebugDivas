@@ -7,9 +7,10 @@ import { Analysis } from '@/types'
  * Parse AI text response into structured Analysis object
  */
 export function parseResponse(responseText: string): Analysis {
-  // TODO: Implement robust parsing
-  // Extract sections: Root Cause, Explanation, Fix Code, Commands, Success Criteria
+  // Debug: Log the raw response
+  console.log('📄 Parsing AI response:', responseText.substring(0, 200) + '...')
   
+  // Extract sections: Root Cause, Explanation, Fix Code, Commands, Success Criteria
   const sections = {
     rootCause: extractSection(responseText, 'Root Cause'),
     explanation: extractSection(responseText, 'Explanation'),
@@ -19,14 +20,21 @@ export function parseResponse(responseText: string): Analysis {
     successCriteria: extractSection(responseText, 'Success Criteria')
   }
 
+  console.log('📊 Extracted sections:', {
+    rootCause: sections.rootCause ? '✅' : '❌',
+    explanation: sections.explanation ? '✅' : '❌',
+    fixCode: sections.fixCode ? '✅' : '❌',
+    commands: sections.commands.length
+  })
+
   return {
-    rootCause: sections.rootCause || 'Unknown error',
-    explanation: sections.explanation || 'Unable to determine explanation',
+    rootCause: sections.rootCause || 'Unable to parse root cause',
+    explanation: sections.explanation || 'Unable to parse explanation',
     fixCode: sections.fixCode,
     fixConfig: sections.fixConfig,
-    commands: sections.commands,
+    commands: sections.commands.length > 0 ? sections.commands : ['No commands provided'],
     successCriteria: sections.successCriteria || 'Error should be resolved',
-    confidence: 75 // TODO: Calculate confidence based on response quality
+    confidence: sections.rootCause && sections.explanation ? 85 : 50
   }
 }
 

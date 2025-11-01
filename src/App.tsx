@@ -5,6 +5,7 @@ import { detectLogType } from './core'
 import { buildPrompt, parseResponse, SAMPLE_LOGS } from './prompts'
 import { saveLog, getAllLogs, searchLogs, deleteLog, initializeStorage } from './storage'
 import { callAI, generateId, copyToClipboard } from './utils'
+import { findSimilarLogs, categorizeError } from './utils/logMatcher'
 import { ErrorLog, Analysis, LogType, SearchFilters } from './types'
 
 function App() {
@@ -16,6 +17,10 @@ function App() {
   const [currentAnalysis, setCurrentAnalysis] = useState<Analysis | null>(null)
   const [savedLogs, setSavedLogs] = useState<ErrorLog[]>([])
   const [searchFilters, setSearchFilters] = useState<SearchFilters>({})
+  const [similarLogs, setSimilarLogs] = useState<ErrorLog[]>([])
+  const [errorCategory, setErrorCategory] = useState<string>('')
+  const [showAmharic, setShowAmharic] = useState<boolean>(false)
+  const [expandedSimilarLog, setExpandedSimilarLog] = useState<string | null>(null)
 
   // Initialize storage on mount
   useEffect(() => {
@@ -37,6 +42,8 @@ function App() {
 
     setIsAnalyzing(true)
     setCurrentAnalysis(null)
+    setSimilarLogs([])
+    setErrorCategory('')
 
     try {
       // 1. Detect log type
@@ -45,41 +52,57 @@ function App() {
 
       console.log('🔍 Detected log type:', logType, 'with confidence:', detection.confidence + '%')
 
-      // 2. Build AI prompt
+      // 2. Categorize error
+      const category = categorizeError(logInput)
+      setErrorCategory(category)
+      console.log('📂 Error category:', category)
+
+      // 3. Find similar past logs
+      const allLogs = await getAllLogs()
+      const similar = findSimilarLogs(logInput, logType, allLogs)
+      setSimilarLogs(similar)
+      if (similar.length > 0) {
+        console.log(`✨ Found ${similar.length} similar past error(s)!`)
+      }
+
+      // 4. Build AI prompt
       const prompt = buildPrompt(logType, logInput)
 
-      // 3. Call AI API (using mock for now)
+      // 5. Call AI API (using mock for now)
       console.log('🤖 Calling AI...')
       const aiResponse = await callAI({ prompt })
 
-      // 4. Parse AI response
+      // 6. Parse AI response
       const analysis = parseResponse(aiResponse.text)
 
       console.log('✅ Analysis complete:', analysis)
 
-      // 5. Create error log object
+      // 7. Create error log object
       const errorLog: ErrorLog = {
         id: generateId(),
         timestamp: new Date(),
         logType: logType,
         rawLog: logInput,
         analysis: analysis,
-        tags: [],
+        tags: [category], // Add category as tag
         isFavorite: false
       }
 
-      // 6. Save to storage
+      // 8. Save to storage
       await saveLog(errorLog)
       console.log('💾 Log saved to storage!')
 
-      // 7. Update UI
+      // 9. Update UI
       setCurrentAnalysis(analysis)
       
-      // 8. Reload log history
+      // 10. Reload log history
       await loadLogs()
 
-      // Show success message
-      alert('✅ Analysis complete and saved to history!')
+      // Show success message with similar logs info
+      const successMsg = similar.length > 0 
+        ? `✅ Analysis complete! Found ${similar.length} similar past error(s).`
+        : '✅ Analysis complete and saved to history!'
+      alert(successMsg)
 
     } catch (error) {
       console.error('❌ Analysis failed:', error)
@@ -192,11 +215,127 @@ function App() {
             {/* Loading State */}
             {isAnalyzing && <LoadingSpinner size="lg" text="Analyzing your error log..." />}
 
+            {/* Similar Past Logs */}
+            {similarLogs.length > 0 && !isAnalyzing && (
+              <div className="bg-cursor-panel border border-yellow-600 rounded-lg p-6 mb-6">
+                <h3 className="text-lg font-semibold text-yellow-400 mb-3">
+                  {showAmharic ? '✨ ተመሳሳይ ያለፉ ስህተቶች ተገኝተዋል!' : `✨ Found ${similarLogs.length} Similar Past Error${similarLogs.length > 1 ? 's' : ''}!`}
+                </h3>
+                <p className="text-sm text-cursor-text mb-4">
+                  {showAmharic 
+                    ? 'ከዚህ በፊት ተመሳሳይ ስህተቶች አጋጥመውዎታል። የሰራውን እንመልከት:' 
+                    : "You've encountered similar errors before. Here's what worked:"}
+                </p>
+                <div className="space-y-3">
+                  {similarLogs.map((log) => {
+                    const isExpanded = expandedSimilarLog === log.id
+                    return (
+                      <div key={log.id} className="bg-cursor-bg border border-cursor-border rounded p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center space-x-2">
+                            <span className="text-xs px-2 py-1 bg-cursor-accent rounded text-white">
+                              {log.logType}
+                            </span>
+                            {log.tags.map((tag, idx) => (
+                              <span key={idx} className="text-xs px-2 py-1 bg-blue-600 rounded text-white">
+                                📂 {tag}
+                              </span>
+                            ))}
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <span className="text-xs text-cursor-text">
+                              {new Date(log.timestamp).toLocaleDateString()}
+                            </span>
+                            <button
+                              onClick={() => setExpandedSimilarLog(isExpanded ? null : log.id)}
+                              className="text-xs text-cursor-accent hover:text-blue-400"
+                            >
+                              {isExpanded ? '▼ Hide' : '▶ Show Details'}
+                            </button>
+                          </div>
+                        </div>
+                        <p className="text-sm text-white mb-2">
+                          {log.analysis?.rootCause || 'No analysis available'}
+                        </p>
+                        {!isExpanded ? (
+                          <p className="text-xs text-cursor-text font-mono line-clamp-2">
+                            {log.rawLog}
+                          </p>
+                        ) : (
+                          <div className="mt-4 space-y-3 border-t border-cursor-border pt-3">
+                            <div>
+                              <p className="text-xs text-cursor-text font-semibold mb-1">
+                                {showAmharic ? 'ዋና ምክንያት:' : 'Root Cause:'}
+                              </p>
+                              <p className="text-sm text-white">{log.analysis?.rootCause}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-cursor-text font-semibold mb-1">
+                                {showAmharic ? 'ማብራሪያ:' : 'Explanation:'}
+                              </p>
+                              <p className="text-sm text-cursor-text">{log.analysis?.explanation}</p>
+                            </div>
+                            {log.analysis?.fixCode && (
+                              <div>
+                                <p className="text-xs text-cursor-text font-semibold mb-1">
+                                  {showAmharic ? 'የመፍትሄ ኮድ:' : 'Fix Code:'}
+                                </p>
+                                <pre className="bg-cursor-bg border border-cursor-border rounded p-3 text-xs overflow-x-auto">
+                                  <code>{log.analysis.fixCode}</code>
+                                </pre>
+                              </div>
+                            )}
+                            <div>
+                              <p className="text-xs text-cursor-text font-semibold mb-1">
+                                {showAmharic ? 'የስህተቱ ቅጂ:' : 'Original Error:'}
+                              </p>
+                              <pre className="bg-cursor-bg border border-cursor-border rounded p-3 text-xs overflow-x-auto">
+                                <code>{log.rawLog}</code>
+                              </pre>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Translation Toggle & Category */}
+            {(errorCategory || currentAnalysis) && !isAnalyzing && (
+              <div className="bg-cursor-panel border border-cursor-border rounded-lg p-4 mb-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    {errorCategory && (
+                      <>
+                        <span className="text-sm text-cursor-text">
+                          {showAmharic ? 'ምድብ:' : 'Category:'}
+                        </span>
+                        <span className="text-sm px-3 py-1 bg-blue-600 rounded text-white font-medium">
+                          📂 {errorCategory}
+                        </span>
+                      </>
+                    )}
+                  </div>
+                  
+                  {/* Translation Toggle Button */}
+                  <button
+                    onClick={() => setShowAmharic(!showAmharic)}
+                    className="flex items-center space-x-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded font-medium transition-colors"
+                  >
+                    <span>{showAmharic ? '🇺🇸 English' : '🇪🇹 አማርኛ'}</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Analysis Result */}
             {currentAnalysis && !isAnalyzing && (
               <AnalysisResult
                 analysis={currentAnalysis}
                 onCopy={handleCopy}
+                showAmharic={showAmharic}
               />
             )}
           </>

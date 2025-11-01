@@ -6,4 +6,6 @@ export { APP_CONFIG, getConfig } from './config'
 export { copyToClipboard, pasteFromClipboard } from './clipboard'
 export { generateId, formatDate, truncateText, debounce, sleep, formatFileSize } from './helpers'
 export { validateLogInput, validateExportData } from './validators'
+export { findSimilarLogs, categorizeError } from './logMatcher'
+export { translateToAmharic, amharicHeaders } from './amharicTranslator'
 

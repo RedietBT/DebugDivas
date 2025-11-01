@@ -6,16 +6,31 @@ import React from 'react'
 import { Analysis } from '@/types'
 import { Card } from './Card'
 import { CopyButton } from './CopyButton'
+import { translateToAmharic, amharicHeaders } from '@/utils/amharicTranslator'
 
 interface AnalysisResultProps {
   analysis: Analysis
   onCopy?: (text: string) => Promise<boolean>
+  showAmharic?: boolean
 }
 
 export const AnalysisResult: React.FC<AnalysisResultProps> = ({
   analysis,
-  onCopy
+  onCopy,
+  showAmharic = false
 }) => {
+  // Get translated version if needed
+  const displayAnalysis = showAmharic ? translateToAmharic(analysis) : analysis
+  const headers = showAmharic ? amharicHeaders : {
+    rootCause: '🎯 Root Cause',
+    explanation: '🧠 Explanation',
+    fixCode: '🛠️ Fix Code',
+    fixConfig: '⚙️ Fix Configuration',
+    commands: '💻 Commands to Run',
+    successCriteria: '🏁 Success Criteria',
+    confidence: 'confident'
+  }
+
   return (
     <div className="space-y-4">
       {/* Root Cause */}
@@ -23,12 +38,12 @@ export const AnalysisResult: React.FC<AnalysisResultProps> = ({
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <h3 className="text-sm font-semibold text-cursor-text mb-2">
-              🎯 Root Cause
+              {headers.rootCause}
             </h3>
-            <p className="text-lg text-white">{analysis.rootCause}</p>
+            <p className="text-lg text-white">{displayAnalysis.rootCause}</p>
           </div>
           <div className="text-sm text-cursor-text">
-            {analysis.confidence}% confident
+            {displayAnalysis.confidence}% {headers.confidence}
           </div>
         </div>
       </Card>
@@ -36,49 +51,49 @@ export const AnalysisResult: React.FC<AnalysisResultProps> = ({
       {/* Explanation */}
       <Card>
         <h3 className="text-sm font-semibold text-cursor-text mb-2">
-          🧠 Explanation
+          {headers.explanation}
         </h3>
-        <p className="text-cursor-text">{analysis.explanation}</p>
+        <p className="text-cursor-text">{displayAnalysis.explanation}</p>
       </Card>
 
       {/* Fix Code */}
-      {analysis.fixCode && (
+      {displayAnalysis.fixCode && (
         <Card>
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-sm font-semibold text-cursor-text">
-              🛠️ Fix Code
+              {headers.fixCode}
             </h3>
-            <CopyButton text={analysis.fixCode} onCopy={onCopy} />
+            <CopyButton text={displayAnalysis.fixCode} onCopy={onCopy} />
           </div>
           <pre className="bg-cursor-bg p-4 rounded overflow-x-auto">
-            <code className="text-sm text-cursor-text">{analysis.fixCode}</code>
+            <code className="text-sm text-cursor-text">{displayAnalysis.fixCode}</code>
           </pre>
         </Card>
       )}
 
       {/* Fix Config */}
-      {analysis.fixConfig && (
+      {displayAnalysis.fixConfig && (
         <Card>
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-sm font-semibold text-cursor-text">
-              ⚙️ Fix Configuration
+              {headers.fixConfig}
             </h3>
-            <CopyButton text={analysis.fixConfig} onCopy={onCopy} />
+            <CopyButton text={displayAnalysis.fixConfig} onCopy={onCopy} />
           </div>
           <pre className="bg-cursor-bg p-4 rounded overflow-x-auto">
-            <code className="text-sm text-cursor-text">{analysis.fixConfig}</code>
+            <code className="text-sm text-cursor-text">{displayAnalysis.fixConfig}</code>
           </pre>
         </Card>
       )}
 
       {/* Commands */}
-      {analysis.commands && analysis.commands.length > 0 && (
+      {displayAnalysis.commands && displayAnalysis.commands.length > 0 && (
         <Card>
           <h3 className="text-sm font-semibold text-cursor-text mb-2">
-            💻 Commands to Run
+            {headers.commands}
           </h3>
           <div className="space-y-2">
-            {analysis.commands.map((cmd, idx) => (
+            {displayAnalysis.commands.map((cmd, idx) => (
               <div key={idx} className="flex items-center justify-between bg-cursor-bg p-3 rounded">
                 <code className="text-sm text-cursor-text">{cmd}</code>
                 <CopyButton text={cmd} onCopy={onCopy} />
@@ -91,9 +106,9 @@ export const AnalysisResult: React.FC<AnalysisResultProps> = ({
       {/* Success Criteria */}
       <Card>
         <h3 className="text-sm font-semibold text-cursor-text mb-2">
-          🏁 Success Criteria
+          {headers.successCriteria}
         </h3>
-        <p className="text-cursor-text">{analysis.successCriteria}</p>
+        <p className="text-cursor-text">{displayAnalysis.successCriteria}</p>
       </Card>
     </div>
   )
