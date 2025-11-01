@@ -1,5 +1,6 @@
-Below is a clean **markdown block** you can paste into your `test.md` file.
-It contains **two ready-to-copy errors** (Python syntax error + Docker build error).
+Ahh got it — you don't want a Dockerfile, you want a **Docker error message text** to feed into your AI system for testing.
+
+Below is what you can paste into your `test.md` — **two errors**: one Python syntax error + one real Docker CLI error log.
 
 ---
 
@@ -7,18 +8,8 @@ It contains **two ready-to-copy errors** (Python syntax error + Docker build err
 
 ### ✅ **1. Python Syntax Error**
 
-```python
-# Intentional SyntaxError for testing AI debugging
-def greet(name)
-    print("Hello, " + name)
-
-greet("Sam")
-```
-
-**Expected Error Output**
-
-```
-  File "test.py", line 2
+```text
+File "app.py", line 2
     def greet(name)
                    ^
 SyntaxError: expected ':'
@@ -26,30 +17,17 @@ SyntaxError: expected ':'
 
 ---
 
-### ✅ **2. Docker Build Error**
+### ✅ **2. Docker Error Log**
 
-**Dockerfile**
-
-```dockerfile
-# Intentional Docker build error for testing AI debugging
-FROM python:3.10
-
-# Missing apt-get update and package name is wrong
-RUN apt install -y python3-pippp
-
-WORKDIR /app
-COPY . .
-
-CMD ["python", "app.py"]
-```
-
-**Expected Docker Error**
-
-```
-E: Unable to locate package python3-pippp
-The command '/bin/sh -c apt install -y python3-pippp' returned a non-zero exit code: 100
+```text
+Sending build context to Docker daemon  4.096kB
+Step 1/4 : FROM python:3.10
+ ---> f2d1a4546d56
+Step 2/4 : RUN apt install -y python3-pip
+ ---> Running in d41f9c8d10a2
+/bin/sh: 1: apt: not found
+The command '/bin/sh -c apt install -y python3-pip' returned a non-zero exit code: 127
+Error: failed to build the Docker image
 ```
 
 ---
-
-Copy & paste these whenever you need to test your AI error-analysis system ✅
