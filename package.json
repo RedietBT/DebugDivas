@@ -1,0 +1,186 @@
+{
+  "name": "vibeassist",
+  "displayName": "VibeAssist",
+  "description": "AI-powered error detection and automatic fix suggestions for developers",
+  "version": "0.1.0",
+  "publisher": "vibeassist",
+  "icon": "icon.png",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Linters",
+    "Debuggers",
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished",
+    "onView:vibeassist.errorsView"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "vibeassist",
+          "title": "VibeAssist",
+          "icon": "resources/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "vibeassist": [
+        {
+          "id": "vibeassist.errorsView",
+          "name": "Detected Errors",
+          "icon": "resources/icon.svg",
+          "contextualTitle": "VibeAssist Errors"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "vibeassist.generateContext",
+        "title": "VibeAssist: Generate Project Context"
+      },
+      {
+        "command": "vibeassist.toggleMonitoring",
+        "title": "VibeAssist: Toggle Error Monitoring"
+      },
+      {
+        "command": "vibeassist.showSettings",
+        "title": "VibeAssist: Open Settings"
+      },
+      {
+        "command": "vibeassist.analyzeFromClipboard",
+        "title": "VibeAssist: Analyze Error from Clipboard"
+      },
+      {
+        "command": "vibeassist.analyzeFromSelection",
+        "title": "VibeAssist: Analyze Error from Selection"
+      },
+      {
+        "command": "vibeassist.analyzeError",
+        "title": "Analyze Error",
+        "icon": "$(sparkle)"
+      },
+      {
+        "command": "vibeassist.applyFix",
+        "title": "Apply Fix",
+        "icon": "$(check)"
+      },
+      {
+        "command": "vibeassist.viewDetails",
+        "title": "View Details",
+        "icon": "$(info)"
+      },
+      {
+        "command": "vibeassist.dismissError",
+        "title": "Dismiss",
+        "icon": "$(close)"
+      },
+      {
+        "command": "vibeassist.refreshErrors",
+        "title": "Refresh",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "vibeassist.clearAllErrors",
+        "title": "Clear All",
+        "icon": "$(clear-all)"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "vibeassist.refreshErrors",
+          "when": "view == vibeassist.errorsView",
+          "group": "navigation"
+        },
+        {
+          "command": "vibeassist.clearAllErrors",
+          "when": "view == vibeassist.errorsView",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "vibeassist.analyzeError",
+          "when": "view == vibeassist.errorsView && viewItem == error",
+          "group": "inline@1"
+        },
+        {
+          "command": "vibeassist.applyFix",
+          "when": "view == vibeassist.errorsView && viewItem == analyzedError",
+          "group": "inline@1"
+        },
+        {
+          "command": "vibeassist.viewDetails",
+          "when": "view == vibeassist.errorsView && viewItem == analyzedError",
+          "group": "inline@2"
+        },
+        {
+          "command": "vibeassist.dismissError",
+          "when": "view == vibeassist.errorsView",
+          "group": "inline@3"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "VibeAssist",
+      "properties": {
+        "vibeassist.openrouterApiKey": {
+          "type": "string",
+          "default": "",
+          "description": "OpenRouter API Key for AI error analysis",
+          "order": 1
+        },
+        "vibeassist.enableAutoMonitoring": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically monitor terminal output for errors",
+          "order": 2
+        },
+        "vibeassist.supportedLanguages": {
+          "type": "array",
+          "default": ["python", "javascript", "typescript"],
+          "description": "Languages to monitor for errors",
+          "order": 3
+        },
+        "vibeassist.autoApplyFixes": {
+          "type": "boolean",
+          "default": false,
+          "description": "Automatically apply fixes without confirmation",
+          "order": 4
+        },
+        "vibeassist.modelName": {
+          "type": "string",
+          "default": "anthropic/claude-3.5-sonnet",
+          "description": "OpenRouter model to use for analysis",
+          "order": 5
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.85.0",
+    "@types/node": "^20.x",
+    "@typescript-eslint/eslint-plugin": "^6.13.0",
+    "@typescript-eslint/parser": "^6.13.0",
+    "eslint": "^8.54.0",
+    "typescript": "^5.3.0"
+  },
+  "dependencies": {
+    "axios": "^1.6.0"
+  }
+}
+
